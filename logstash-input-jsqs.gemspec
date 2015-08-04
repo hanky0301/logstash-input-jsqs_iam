@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.platform = RUBY_PLATFORM
   s.name = 'logstash-input-jsqs'
-  s.version = '0.9.0'
+  s.version = '0.9.1'
   s.licenses = ['Apache License (2.0)']
   s.summary = "SQS input plugin using the AWS Java SDK"
   s.description = "This gem is a logstash plugin required to be installed on top of the Logstash core pipeline using $LS_HOME/bin/plugin install logstash-input-jsqs. This gem is not a stand-alone program"
