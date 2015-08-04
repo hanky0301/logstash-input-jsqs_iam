@@ -1,19 +1,8 @@
 # encoding: utf-8
-require "logstash/inputs/threadable"
-require "logstash/namespace"
-require "logstash/plugin_mixins/aws_config"
-require "digest/sha2"
-require 'logstash-input-jsqs_jars.rb'
+# Original plugin by Al Belsky (https://logstash.jira.com/browse/LOGSTASH-1968)
 
-# aws-java-sdk dependencies
-# require 'jar/aws-java-sdk.jar'
-# require 'jar/httpclient-4.2.jar'
-# require 'jar/httpcore-4.2.jar'
-# require 'jar/commons-codec-1.6'
-# require 'jar/jackson-core-2.1.1.jar'
-# require 'jar/jackson-databind-2.1.1.jar'
-# require 'jar/jackson-annotations-2.1.1.jar'
-#
+require "logstash/inputs/threadable"
+require 'logstash-input-jsqs_jars.rb'
 
 # Pull events from an Amazon Web Services Simple Queue Service (SQS) queue.
 #
@@ -67,14 +56,6 @@ require 'logstash-input-jsqs_jars.rb'
 #
 # See http://aws.amazon.com/iam/ for more details on setting up AWS identities.
 #
-
-# -------------------------------------
-# NOTICE:
-# This is a custom SQS input that uses the Java AWS SDK (Ruby SDK didn't scale beyond 200 messages per second).
-# This plugin assumes that the logstash distribution contains the Java AWS SDK its required dependencies.
-# In Logstash 1.3.3, Apache HTTP client (4.1) had to be removed from the Logstash distribution,
-#   as it was incompatible with the Apache HTTP client 4.2 version used by the Java AWS SDK.
-# -------------------------------------
 
 class LogStash::Inputs::JSQS < LogStash::Inputs::Threadable
 
