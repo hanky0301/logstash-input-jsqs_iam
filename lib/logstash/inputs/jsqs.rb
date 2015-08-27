@@ -70,35 +70,39 @@ class LogStash::Inputs::JSQS < LogStash::Inputs::Threadable
   config :max_inflight_receive_batches, :validate => :number, :default => 50
   config :max_done_receive_batches, :validate => :number, :default => 50
   config :max_number_of_messages, :validate => :number, :default => 10
+  config :retry_count, :validate => :number, :default => 5
 
   @receiveRequest
 
   public
   def register
-
     @logger.info("Registering SQS input", :queue => @queue)
 
-    begin
-        # Client config
-        @logger.debug("Creating AWS SQS queue client", :queue => @queue)
-        clientConfig = ClientConfiguration.new.withMaxConnections(@max_connections)
-        # SQS client
-        @sqs = AmazonSQSAsyncClient.new(clientConfig)
-        @logger.debug("Amazon SQS Client created")
-    
-        # Buffered client config
-        queueBufferConfig = QueueBufferConfig.new.withMaxBatchOpenMs(@max_batch_open_ms).withMaxInflightReceiveBatches(@max_inflight_receive_batches).withMaxDoneReceiveBatches(@max_done_receive_batches)
+    # Client config
+    @logger.debug("Creating AWS SQS queue client", :queue => @queue)
+    clientConfig = ClientConfiguration.new.withMaxConnections(@max_connections)
 
-        @bufferedSqs = AmazonSQSBufferedAsyncClient.new(@sqs, queueBufferConfig);
-        @logger.info("Connected to AWS SQS queue successfully.", :queue => @queue)
-        
-        @receiveRequest = ReceiveMessageRequest.new(@queueUrl).withMaxNumberOfMessages(@max_number_of_messages)
-        
-    rescue Exception => e
-      @logger.error("Unable to access SQS queue.", :error => e.to_s, :queue => @queue)
-      throw e
-    end # begin/rescue
-    
+    # SQS client
+    @sqs = AmazonSQSAsyncClient.new(clientConfig)
+    @logger.debug("Amazon SQS Client created")
+
+    # Buffered client config
+    queueBufferConfig = QueueBufferConfig.new.withMaxBatchOpenMs(@max_batch_open_ms).withMaxInflightReceiveBatches(@max_inflight_receive_batches).withMaxDoneReceiveBatches(@max_done_receive_batches)
+
+    @bufferedSqs = AmazonSQSBufferedAsyncClient.new(@sqs, queueBufferConfig);
+    @logger.info("Connected to AWS SQS queue successfully.", :queue => @queue)
+
+    @receiveRequest = ReceiveMessageRequest.new(@queueUrl).withMaxNumberOfMessages(@max_number_of_messages)
+
+  rescue Exception => e
+    if (@retry_count -= 1) > 0
+      @logger.warn("Unable to access SQS queue. Sleeping before retrying.", :error => e.to_s, :queue => @queue)
+      sleep(10)
+      retry
+    else
+      @logger.error("Unable to access SQS queue. Aborting.", :error => e.to_s, :queue => @queue)
+      teardown
+    end # if
   end # def register
 
   public
