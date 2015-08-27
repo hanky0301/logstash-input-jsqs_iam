@@ -94,15 +94,6 @@ class LogStash::Inputs::JSQS < LogStash::Inputs::Threadable
 
     @receiveRequest = ReceiveMessageRequest.new(@queueUrl).withMaxNumberOfMessages(@max_number_of_messages)
 
-  rescue Exception => e
-    if (@retry_count -= 1) > 0
-      @logger.warn("Unable to access SQS queue. Sleeping before retrying.", :error => e.to_s, :queue => @queue)
-      sleep(10)
-      retry
-    else
-      @logger.error("Unable to access SQS queue. Aborting.", :error => e.to_s, :queue => @queue)
-      teardown
-    end # if
   end # def register
 
   public
@@ -110,6 +101,7 @@ class LogStash::Inputs::JSQS < LogStash::Inputs::Threadable
     @logger.debug("Polling SQS queue", :queue => @queue)
 
     while running?   
+      begin
         result = @bufferedSqs.receiveMessage(@receiveRequest)            
         deleteEntries = [] 
         # Process messages (expected 0 - 10 messages)
@@ -128,7 +120,16 @@ class LogStash::Inputs::JSQS < LogStash::Inputs::Threadable
             # Issue delete request
             @bufferedSqs.deleteMessageBatch(deleteRequest);            
         end # end if
-        
+      rescue Exception => e
+        if (@retry_count -= 1) > 0
+          @logger.warn("Unable to access SQS queue. Sleeping before retrying.", :error => e.to_s, :queue => @queue)
+          sleep(10)
+          retry
+        else
+          @logger.error("Unable to access SQS queue. Aborting.", :error => e.to_s, :queue => @queue)
+         teardown
+        end # if
+      end # begin
     end # polling loop
   end # def run
 
