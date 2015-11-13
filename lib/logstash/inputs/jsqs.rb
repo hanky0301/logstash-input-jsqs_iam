@@ -107,8 +107,15 @@ class LogStash::Inputs::JSQS < LogStash::Inputs::Threadable
         # Process messages (expected 0 - 10 messages)
         result.messages.each_with_index { |message, i|
             @codec.decode(message.body) do |event|
-                decorate(event)
-                output_queue << event
+                if event.is_a?(Array)
+                    event.each do |msg|
+                        decorate(msg)
+                        output_queue << msg
+                    end
+                else
+                    decorate(event)
+                    output_queue << event
+                end
             end # codec.decode
             
             #Add Delete entry for this message
