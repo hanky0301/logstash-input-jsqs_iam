@@ -82,10 +82,10 @@ class LogStash::Inputs::JSQS < LogStash::Inputs::Threadable
     # Client config
     @logger.debug("Creating AWS SQS queue client", :queue => @queue)
     clientConfig = ClientConfiguration.new.withMaxConnections(@max_connections)
+    credentials = ProfileCredentialsProvider.new(@aws_profile)
 
     # SQS client
-    @credentials = ProfileCredentialsProvider.new(@aws_profile)
-    @sqs = AmazonSQSAsyncClient.new(@credentials.getCredentials(), clientConfig)
+    @sqs = AmazonSQSAsyncClient.new(credentials.getCredentials(), clientConfig)
     @logger.debug("Amazon SQS Client created")
 
     # Buffered client config
