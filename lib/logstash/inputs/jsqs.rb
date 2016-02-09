@@ -71,6 +71,7 @@ class LogStash::Inputs::JSQS < LogStash::Inputs::Threadable
   config :max_done_receive_batches, :validate => :number, :default => 50
   config :max_number_of_messages, :validate => :number, :default => 10
   config :retry_count, :validate => :number, :default => 5
+  config :aws_profile, :validate => :string, :default => "default"
 
   @receiveRequest
 
@@ -83,7 +84,8 @@ class LogStash::Inputs::JSQS < LogStash::Inputs::Threadable
     clientConfig = ClientConfiguration.new.withMaxConnections(@max_connections)
 
     # SQS client
-    @sqs = AmazonSQSAsyncClient.new(clientConfig)
+    @credentials = ProfileCredentialsProvider.new(@aws_profile)
+    @sqs = AmazonSQSAsyncClient.new(@credentials.getCredentials(), clientConfig)
     @logger.debug("Amazon SQS Client created")
 
     # Buffered client config
