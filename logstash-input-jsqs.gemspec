@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name          = 'logstash-input-jsqs'
-  s.version       = '0.10.0'
-  s.homepage      = 'TODO: Put your plugin''s website or public repo URL here.'
+  s.version       = '5.0.0'
+  s.homepage      = 'https://github.com/JamieCressey/logstash-input-jsqs'
   s.licenses      = ['Apache-2.0']
   s.summary       = "SQS input plugin using the AWS Java SDK"
   s.description   = "This gem is a logstash plugin required to be installed on top of the Logstash core pipeline using $LS_HOME/bin/plugin install logstash-input-jsqs. This gem is not a stand-alone program"
@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
 
   # Files
   s.files = Dir['lib/**/*','spec/**/*','vendor/**/*','*.gemspec','*.md','CONTRIBUTORS','Gemfile','LICENSE','NOTICE.TXT']
-   # Tests
+  # Tests
   s.test_files = s.files.grep(%r{^(test|spec|features)/})
 
   # Special flag to let us know this is actually a logstash plugin
