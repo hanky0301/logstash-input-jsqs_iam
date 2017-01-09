@@ -1,66 +1,24 @@
 # encoding: utf-8
 # Original plugin by Al Belsky (https://logstash.jira.com/browse/LOGSTASH-1968)
-
 require "logstash/inputs/threadable"
+require "logstash/namespace"
 require 'logstash-input-jsqs_jars.rb'
 
-# Pull events from an Amazon Web Services Simple Queue Service (SQS) queue.
-#
-# SQS is a simple, scalable queue system that is part of the 
-# Amazon Web Services suite of tools.
-#
-# Although SQS is similar to other queuing systems like AMQP, it
-# uses a custom API and requires that you have an AWS account.
-# See http://aws.amazon.com/sqs/ for more details on how SQS works,
-# what the pricing schedule looks like and how to setup a queue.
-#
-# To use this plugin, you *must*:
-#
-#  * Have an AWS account
-#  * Setup an SQS queue
-#  * Create an identify that has access to consume messages from the queue.
-#
-# The "consumer" identity must have the following permissions on the queue:
-#
-#  * sqs:ChangeMessageVisibility
-#  * sqs:ChangeMessageVisibilityBatch
-#  * sqs:DeleteMessage
-#  * sqs:DeleteMessageBatch
-#  * sqs:GetQueueAttributes
-#  * sqs:GetQueueUrl
-#  * sqs:ListQueues
-#  * sqs:ReceiveMessage
-#
-# Typically, you should setup an IAM policy, create a user and apply the IAM policy to the user.
-# A sample policy is as follows:
-#
-#     {
-#       "Statement": [
-#         {
-#           "Action": [
-#             "sqs:ChangeMessageVisibility",
-#             "sqs:ChangeMessageVisibilityBatch",
-#             "sqs:GetQueueAttributes",
-#             "sqs:GetQueueUrl",
-#             "sqs:ListQueues",
-#             "sqs:SendMessage",
-#             "sqs:SendMessageBatch"
-#           ],
-#           "Effect": "Allow",
-#           "Resource": [
-#             "arn:aws:sqs:us-east-1:123456789012:Logstash"
-#           ]
-#         }
-#       ]
-#     } 
-#
-# See http://aws.amazon.com/iam/ for more details on setting up AWS identities.
-#
+java_import "java.util.concurrent.Executors"
+java_import "java.util.concurrent.atomic.AtomicInteger"
+java_import "com.amazonaws.ClientConfiguration"
+java_import "com.amazonaws.auth.profile.ProfileCredentialsProvider"
+java_import "com.amazonaws.services.sqs.AmazonSQSAsyncClient"
+java_import "com.amazonaws.services.sqs.buffered.AmazonSQSBufferedAsyncClient"
+java_import "com.amazonaws.services.sqs.buffered.QueueBufferConfig"
+java_import "com.amazonaws.services.sqs.model.ReceiveMessageRequest"
+java_import "com.amazonaws.services.sqs.model.DeleteMessageBatchRequest"
+java_import "com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry"
 
-class LogStash::Inputs::JSQS < LogStash::Inputs::Threadable
-
+class LogStash::Inputs::Jsqs < LogStash::Inputs::Threadable
   config_name "jsqs"
 
+  # If undefined, Logstash will complain, even if codec is unused.
   default :codec, "json"
 
   # Name of the SQS Queue name to pull messages from. Note that this is just the name of the queue, not the URL or ARN.
@@ -77,15 +35,15 @@ class LogStash::Inputs::JSQS < LogStash::Inputs::Threadable
 
   public
   def register
-    @logger.info("Registering SQS input", :queue => @queue)
+    @logger.info("Registering SQS input")
 
     # Client config
-    @logger.debug("Creating AWS SQS queue client", :queue => @queue)
+    @logger.debug("Creating AWS SQS queue client")
     clientConfig = ClientConfiguration.new.withMaxConnections(@max_connections)
     credentials = ProfileCredentialsProvider.new(@aws_profile)
 
     # SQS client
-    @sqs = AmazonSQSAsyncClient.new(credentials.getCredentials(), clientConfig)
+    @sqs = AmazonSQSAsyncClient.new(credentials, clientConfig)
     @logger.debug("Amazon SQS Client created")
 
     # Buffered client config
@@ -102,7 +60,7 @@ class LogStash::Inputs::JSQS < LogStash::Inputs::Threadable
   def run(output_queue)
     @logger.debug("Polling SQS queue", :queue => @queue)
 
-    while running?   
+    while !stop?
       begin
         result = @bufferedSqs.receiveMessage(@receiveRequest)            
         deleteEntries = [] 
@@ -135,17 +93,15 @@ class LogStash::Inputs::JSQS < LogStash::Inputs::Threadable
           sleep(10)
           retry
         else
-          @logger.error("Unable to access SQS queue. Aborting.", :error => e.to_s, :queue => @queue)
-         teardown
+         @logger.error("Unable to access SQS queue. Aborting.", :error => e.to_s, :queue => @queue)
+         stop
         end # if
       end # begin
     end # polling loop
   end # def run
 
-  def teardown
+  def stop
     @sqs = nil
     @bufferedSqs = nil
-    finished
-  end # def teardown
-
-end # class LogStash::Inputs::SQS
+  end
+end # class LogStash::Inputs::Jsqs
