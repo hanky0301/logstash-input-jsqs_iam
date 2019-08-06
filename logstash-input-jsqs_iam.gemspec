@@ -1,12 +1,12 @@
 Gem::Specification.new do |s|
-  s.name          = 'logstash-input-jsqs'
+  s.name          = 'logstash-input-jsqs_iam'
   s.version       = '5.0.0'
-  s.homepage      = 'https://github.com/JamieCressey/logstash-input-jsqs'
+  s.homepage      = 'https://github.com/hanky0301/logstash-input-jsqs_iam'
   s.licenses      = ['Apache-2.0']
-  s.summary       = "SQS input plugin using the AWS Java SDK"
-  s.description   = "This gem is a logstash plugin required to be installed on top of the Logstash core pipeline using $LS_HOME/bin/plugin install logstash-input-jsqs. This gem is not a stand-alone program"
-  s.authors       = ["Jamie Cressey"]
-  s.email         = 'jamiecressey89@gmail.com'
+  s.summary       = "SQS input plugin using the AWS Java SDK with instance profile credentials"
+  s.description   = "This gem is a logstash plugin required to be installed on top of the Logstash core pipeline using $LS_HOME/bin/plugin install logstash-input-jsqs_iam. This gem is not a stand-alone program"
+  s.authors       = ["Hank Chang"]
+  s.email         = 'hanky0301@gmail.com'
   s.require_paths = ['lib']
   s.platform      = RUBY_PLATFORM
 

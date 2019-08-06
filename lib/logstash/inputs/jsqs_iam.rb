@@ -15,8 +15,8 @@ java_import "com.amazonaws.services.sqs.model.ReceiveMessageRequest"
 java_import "com.amazonaws.services.sqs.model.DeleteMessageBatchRequest"
 java_import "com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry"
 
-class LogStash::Inputs::Jsqs < LogStash::Inputs::Threadable
-  config_name "jsqs"
+class LogStash::Inputs::JsqsIam < LogStash::Inputs::Threadable
+  config_name "jsqs_iam"
 
   # If undefined, Logstash will complain, even if codec is unused.
   default :codec, "json"
@@ -102,4 +102,4 @@ class LogStash::Inputs::Jsqs < LogStash::Inputs::Threadable
     @sqs = nil
     @bufferedSqs = nil
   end
-end # class LogStash::Inputs::Jsqs
+end # class LogStash::Inputs::JsqsIam
